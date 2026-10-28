@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- GitHub Pages serves this file at any missing URL depth, so the site base is computed instead of using ../ -->
+<script>
+  window.BARQ_BASE = location.pathname.split('/')[1] === 'barq-demo' ? location.origin + '/barq-demo/' : location.origin + '/';
+  document.write('<script src="' + window.BARQ_BASE + 'assets/amp.js"><\/script>');
+</script>
+<script>if (window.BarqAmp) BarqAmp.bootPublic();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Page not found</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #000000; color: #090909; display: flex; align-items: center; justify-content: center; }
+  .screen { width: 390px; max-width: 100vw; height: min(844px, 100vh); background: #F8F8FA; border-radius: 48px; box-shadow: 0 0 0 12px #1b1b1d; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px; box-sizing: border-box; }
+  .mark { width: 88px; height: 88px; border-radius: 22px; background: #000000; color: #FFFFFF; display: flex; align-items: center; justify-content: center; margin-bottom: 22px; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  p { color: #6C6C6C; font-size: 15px; line-height: 1.45; margin: 0 0 28px; }
+  a { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; border-radius: 12px; background: #090909; color: #FFFFFF; font-weight: 600; text-decoration: none; }
+  @media (max-width: 480px) { .screen { border-radius: 0; box-shadow: none; height: 100vh; } }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="mark"><svg width="30" height="48" viewBox="0 0 40 64" aria-hidden="true"><path fill="currentColor" d="M17 0h6v15h3v6c0 6 4 10 10 10v4c-6 0-10 4-10 10v4h-3v15h-6V54h-3v-4c0-6-4-10-10-10v-4c6 0 10-4 10-10v-5h3V0Zm3 25c-1 5-3 8-8 9.5 5 1.5 7 4.5 8 9.5 1-5 3-8 8-9.5-5-1.5-7-4.5-8-9.5Z"/></svg></div>
+  <h1>This page took a wrong turn ⚡</h1>
+  <p>We couldn’t find that screen. Head back to barq — 1 app, limitless possibilities.</p>
+  <a id="home" href="./">Back to barq</a>
+</div>
+<script>document.getElementById('home').href = window.BARQ_BASE;</script>
+</body>
+</html>

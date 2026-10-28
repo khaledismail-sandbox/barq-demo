@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Selfie check' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Selfie check</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../nafath/" aria-label="Back"></button><div class="tb-title">Selfie check</div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <h1 class="title-lg">Take a quick selfie</h1>
+    <div class="card">
+      <div class="amp-block" style="height:300px;border-radius:14px;background:#111;display:flex;align-items:center;justify-content:center;color:#fff">
+        <div style="width:190px;height:240px;border-radius:50%;border:3px dashed var(--yellow);display:flex;align-items:center;justify-content:center"><span data-icon="camera" data-size="40"></span></div>
+      </div>
+      <p class="sub mt12">Center your face in the oval, in good light, without glasses.</p>
+      <button class="btn mt16" type="button" id="snap">Take selfie</button>
+    </div>
+  </main>
+</div></div></div>
+<script>
+document.getElementById('snap').addEventListener('click', function () {
+  Barq.appOnlySheet('Selfie check', 'The live selfie check runs in the barq app camera.');
+});
+</script>
+</body>
+</html>

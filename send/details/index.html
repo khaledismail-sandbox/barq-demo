@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Send money' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Send money</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../quote/" aria-label="Back"></button><div class="tb-title">Send money</div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <div class="card">
+      <div class="ben-card" id="ben"></div>
+      <div class="mt12"><span class="badge"><span data-icon="check" data-size="14"></span>Beneficiary confirmed</span></div>
+    </div>
+
+    <div class="card mt12" style="text-align:center;padding:22px 16px">
+      <div class="caption">You send</div>
+      <div style="font-size:34px;font-weight:800;letter-spacing:-1px;margin-top:4px"><span id="send">—</span> <small style="font-size:17px">SAR</small></div>
+      <div class="sub mt8" id="recv">—</div>
+      <div class="caption mt8" id="qid">—</div>
+    </div>
+
+    <div class="card mt12" style="padding:4px 16px">
+      <div class="kv"><span class="k">Transfer fee</span><span class="v">0 SAR</span></div>
+      <div class="kv"><span class="k">Arrives</span><span class="v" id="speed">—</span></div>
+      <div class="kv"><span class="k">Total to pay</span><span class="v" id="total">—</span></div>
+    </div>
+
+    <div class="section-head"><span>Purpose of transfer</span></div>
+    <div class="chips" id="purpose">
+      <button class="chip active">Family support</button>
+      <button class="chip">Savings</button>
+      <button class="chip">Education</button>
+    </div>
+
+    <div class="section-head"><span>Referral code</span></div>
+    <form id="ref" class="input-group" autocomplete="off">
+      <input class="input" id="code" placeholder="e.g. SAVEQX" style="text-transform:uppercase">
+      <button class="btn sm secondary" type="submit" style="min-height:52px">Apply</button>
+    </form>
+    <div class="helper" id="refHelp">Have a friend’s code? Apply it for bonus cashback.</div>
+  </main>
+  <div class="footer-cta"><button class="btn" id="cont">Continue</button></div>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var b = Barq.beneficiary(), q = Barq.quote(), c = BarqData.corridor(q.corridor), t = Barq.totals(q);
+  var SPEED = { instant: 'In seconds ⚡', same_day: 'Same day', next_day: 'Next business day' };
+  document.getElementById('ben').innerHTML = Barq.avatar(b.name, b.corridor) + '<div class="grow"><div class="nm">' + Barq.esc(b.name) + '</div><div class="dt">' + c.country + ' · ' + Barq.esc(b.method) + ' · ' + Barq.esc(b.detail) + '</div></div>';
+  document.getElementById('send').textContent = Barq.money(q.send_amount_sar);
+  document.getElementById('recv').textContent = b.name.split(' ')[0] + ' receives ' + Barq.money(t.receive) + ' ' + c.currency;
+  document.getElementById('qid').textContent = 'Quote ' + q.quote_id + ' · 1 SAR = ' + c.rate.toFixed(2) + ' ' + c.currency;
+  document.getElementById('speed').textContent = SPEED[q.payout_speed];
+  document.getElementById('total').textContent = Barq.money(t.send_total_sar) + ' SAR';
+  document.getElementById('purpose').addEventListener('click', function (e) {
+    var x = e.target.closest('.chip'); if (!x) return;
+    this.querySelectorAll('.chip').forEach(function (y) { y.classList.toggle('active', y === x); });
+  });
+
+  var help = document.getElementById('refHelp'), codeEl = document.getElementById('code');
+  var existing = Barq.referral();
+  if (existing) { codeEl.value = existing.code; show(existing); }
+  function show(r) {
+    help.className = 'helper ' + (r.valid ? 'ok' : 'err');
+    help.textContent = r.valid ? 'Code applied — ' + r.bonus + ' SAR cashback after your transfer ⚡' : 'That code isn’t valid. Check it and try again.';
+  }
+  document.getElementById('ref').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = codeEl.value.trim().toUpperCase();
+    if (!code) return;
+    var bonus = BarqData.REFERRAL_CODES[code] || 0;
+    var r = { code: code, valid: bonus > 0, bonus: bonus };
+    Barq.set('referral', r);
+    show(r);
+    BarqAmp.track('Referral Code Entered', { referral_code: code, referral_code_valid: r.valid, referral_bonus_sar: bonus });
+  });
+
+  document.getElementById('cont').addEventListener('click', function () {
+    var next = Barq.isVerified() ? '../review/' : '../../kyc/id/';
+    BarqAmp.trackThenGo('Send Money Started', {
+      quote_id: q.quote_id,
+      corridor: q.corridor,
+      send_amount_sar: q.send_amount_sar,
+      recipient_count: 1,
+      send_total_sar: t.send_total_sar
+    }, next);
+  });
+})();
+</script>
+</body>
+</html>

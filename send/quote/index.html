@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Transfer quote' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Transfer quote</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../recipients/" aria-label="Back"></button><div class="tb-title">Transfer quote</div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <a class="card ben-card card-link" href="../recipients/" id="ben"></a>
+
+    <div class="amount-box mt12">
+      <div class="lbl">You send</div>
+      <div class="val">
+        <input id="amt" inputmode="decimal" aria-label="Amount in SAR">
+        <span class="cur">🇸🇦 SAR</span>
+      </div>
+    </div>
+    <div class="rate-strip">
+      <span id="rate">1 SAR = —</span>
+      <span class="timer"><svg class="ring" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="var(--line)" stroke-width="2.5"/><circle id="ringArc" cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="40.84" stroke-dashoffset="0" transform="rotate(-90 8 8)"/></svg><span id="timer">30s</span></span>
+    </div>
+    <div class="amount-box">
+      <div class="lbl" id="recvLbl">They receive</div>
+      <div class="val">
+        <span class="out" id="recv">—</span>
+        <span class="cur" id="recvCur">—</span>
+      </div>
+    </div>
+
+    <div class="chips scroll mt12" id="quick">
+      <button class="chip" data-a="500">500</button>
+      <button class="chip" data-a="800">800</button>
+      <button class="chip" data-a="1000">1,000</button>
+      <button class="chip" data-a="1500">1,500</button>
+      <button class="chip" data-a="2000">2,000</button>
+    </div>
+
+    <div class="card mt16" style="padding:4px 16px">
+      <div class="kv"><span class="k">Transfer fee</span><span class="v"><span class="strike">15.00</span>0 SAR <span class="badge" style="margin-left:4px">Waived</span></span></div>
+      <div class="kv"><span class="k">VAT</span><span class="v">0.00 SAR</span></div>
+      <div class="kv"><span class="k">Exchange rate</span><span class="v" id="rate2">—</span></div>
+      <div class="kv"><span class="k">Arrives</span><span class="v" id="speed">—</span></div>
+      <div class="kv"><span class="k strong" style="color:var(--ink)">Total to pay</span><span class="v" style="font-size:16px" id="total">—</span></div>
+    </div>
+
+    <div class="section-head"><span>Send money your way</span></div>
+    <div class="chips" id="method">
+      <button class="chip" data-v="Bank Transfer">Bank Transfer</button>
+      <button class="chip" data-v="Cash Pick Up">Cash Pick Up</button>
+      <button class="chip" data-v="Digital Wallet">Digital Wallet</button>
+    </div>
+    <p class="caption mt16">Best exchange rates in the Kingdom · Quick, easy and arrives in seconds ⚡</p>
+  </main>
+  <div class="footer-cta"><a class="btn" href="../details/" id="cont">Continue</a></div>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var b = Barq.beneficiary();
+  var q = Barq.quote();
+  var c = BarqData.corridor(q.corridor);
+  var SPEED = { instant: 'In seconds ⚡', same_day: 'Same day', next_day: 'Next business day' };
+
+  document.getElementById('ben').innerHTML = Barq.avatar(b.name, b.corridor) +
+    '<div class="grow"><div class="nm">' + Barq.esc(b.name) + '</div><div class="dt">' + c.country + ' · ' + Barq.esc(b.method) + ' · ' + Barq.esc(b.detail) + '</div></div><span class="caption">Change</span>';
+  document.getElementById('rate').innerHTML = '1 SAR = <b>' + c.rate.toFixed(2) + ' ' + c.currency + '</b>';
+  document.getElementById('rate2').textContent = '1 SAR = ' + c.rate.toFixed(2) + ' ' + c.currency;
+  document.getElementById('recvCur').textContent = c.flag + ' ' + c.currency;
+  document.getElementById('recvLbl').textContent = b.name.split(' ')[0] + ' receives';
+  document.getElementById('speed').textContent = SPEED[q.payout_speed];
+  document.querySelectorAll('#method .chip').forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-v') === b.method); });
+  document.getElementById('method').addEventListener('click', function (e) {
+    var x = e.target.closest('.chip'); if (!x) return;
+    this.querySelectorAll('.chip').forEach(function (y) { y.classList.toggle('active', y === x); });
+  });
+
+  var amtEl = document.getElementById('amt');
+  function paint() {
+    var t = Barq.totals(q);
+    document.getElementById('recv').textContent = Barq.money(t.receive);
+    document.getElementById('total').textContent = Barq.money(t.send_total_sar) + ' SAR';
+    document.querySelectorAll('#quick .chip').forEach(function (x) { x.classList.toggle('active', +x.getAttribute('data-a') === q.send_amount_sar); });
+  }
+  amtEl.value = q.send_amount_sar;
+  paint();
+  amtEl.addEventListener('input', function () {
+    var v = parseFloat(amtEl.value.replace(/[^\d.]/g, ''));
+    if (v > 0) { q = Barq.setAmount(v); paint(); }
+  });
+  document.getElementById('quick').addEventListener('click', function (e) {
+    var x = e.target.closest('[data-a]'); if (!x) return;
+    q = Barq.setAmount(+x.getAttribute('data-a')); amtEl.value = q.send_amount_sar; paint();
+  });
+
+  var left = BarqData.RATE_VALID_SECONDS, arc = document.getElementById('ringArc'), tEl = document.getElementById('timer');
+  setInterval(function () {
+    left = left <= 1 ? BarqData.RATE_VALID_SECONDS : left - 1;
+    tEl.textContent = left + 's';
+    arc.setAttribute('stroke-dashoffset', (40.84 * (1 - left / BarqData.RATE_VALID_SECONDS)).toFixed(2));
+  }, 1000);
+
+  BarqAmp.track('Transfer Quote Viewed', {
+    quote_id: q.quote_id,
+    corridor: q.corridor,
+    send_amount_sar: q.send_amount_sar,
+    fx_rate: q.fx_rate,
+    rate_valid_seconds: BarqData.RATE_VALID_SECONDS,
+    payout_speed: q.payout_speed
+  });
+})();
+</script>
+</body>
+</html>

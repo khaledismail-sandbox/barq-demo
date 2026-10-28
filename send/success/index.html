@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Money sent' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Money sent</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><div class="tb-spacer"></div><div class="tb-title"></div><button class="icon-btn" id="kebab" aria-label="More options"><svg width="4" height="18" viewBox="0 0 4 18" fill="currentColor" aria-hidden="true"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="9" r="2"/><circle cx="2" cy="16" r="2"/></svg></button></header>
+  <main class="content">
+    <section class="card success-card">
+      <span id="av"></span>
+      <div class="who" id="who">—</div>
+      <div class="caption mt8" id="acct">—</div>
+      <div class="big" id="big">—</div>
+      <div class="caption row" style="justify-content:space-between;padding:4px 20px 0" id="when"></div>
+      <div class="pill-success mt16">Money sent successfully</div>
+    </section>
+    <div class="arrow-node" data-icon="send" data-size="20"></div>
+    <section class="card" style="padding:22px 20px 12px">
+      <div class="strong" style="font-size:14px">From</div>
+      <div class="row mt12">
+        <div class="grow"><div style="font-weight:600;font-size:14px" id="from">—</div><div class="caption">barq Wallet</div></div>
+        <span class="avatar" style="width:36px;height:36px;background:var(--ink);color:var(--yellow);font-size:12px" id="fromAv">—</span>
+      </div>
+      <div class="kv" style="border:0"><span class="k" style="font-size:12px">They receive</span><span class="v" id="recv">—</span></div>
+      <div class="kv" style="border:0;padding-top:0"><span class="k" style="font-size:12px">Note</span><span class="v">Family support</span></div>
+      <div class="kv" style="border:0;padding-top:0"><span class="k" style="font-size:12px">Txn ID</span><button class="copy-btn" id="copy"><span id="tid">—</span><span data-icon="copy" data-size="16" style="color:var(--muted-2)"></span></button></div>
+    </section>
+  </main>
+  <div class="footer-cta"><a class="btn" href="../../home/">Done</a></div>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var lt = Barq.get('last_transfer');
+  var p = Barq.persona();
+  var rec = lt ? lt.recipient : Barq.beneficiary();
+  function maskName(n) { var parts = String(n).split(' '); return parts[0] + (parts[1] ? ' ' + parts[1][0] + '*****' : ''); }
+  document.getElementById('av').outerHTML = Barq.avatar(rec.name, rec.corridor, 'lg');
+  document.getElementById('who').textContent = maskName(rec.name);
+  document.getElementById('acct').textContent = rec.method + ' ' + String(rec.detail).replace(/[0-9](?=[0-9]{0,3}$)/g, '*');
+  var amt = lt ? lt.amount : 0;
+  var whole = Math.floor(amt), cents = (amt - whole).toFixed(2).slice(1);
+  document.getElementById('big').innerHTML = '-' + whole + '<small>' + cents + ' SAR</small>';
+  var d = lt ? new Date(lt.ts) : new Date();
+  var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var hh = d.getHours() % 12 || 12, mm = ('0' + d.getMinutes()).slice(-2);
+  document.getElementById('when').innerHTML = '<span>' + days[d.getDay()] + ', ' + hh + ':' + mm + (d.getHours() < 12 ? 'am' : 'pm') + '</span><span>' + d.getDate() + ' ' + months[d.getMonth()] + ', ' + d.getFullYear() + '</span>';
+  document.getElementById('from').textContent = maskName(p.name + ' ' + (p.name.split(' ')[1] || 'K'));
+  document.getElementById('fromAv').textContent = Barq.initials(p.name);
+  document.getElementById('recv').textContent = lt ? Barq.money(lt.receive) + ' ' + lt.currency : '—';
+  document.getElementById('tid').textContent = lt ? lt.transfer_id : '—';
+  document.getElementById('copy').addEventListener('click', function () {
+    if (lt && navigator.clipboard) navigator.clipboard.writeText(lt.transfer_id).catch(function () {});
+    Barq.toast('Txn ID copied');
+  });
+  document.getElementById('kebab').addEventListener('click', function () { Barq.appOnlySheet('Share receipt', 'Share or download your receipt in the barq app.'); });
+})();
+</script>
+</body>
+</html>

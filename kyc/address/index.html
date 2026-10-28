@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'National address' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — National address</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../selfie/" aria-label="Back"></button><div class="tb-title">National address</div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <h1 class="title-lg">Your national address</h1>
+    <form class="card" id="f" autocomplete="off">
+      <label class="field"><span>Short address (4 letters + 4 digits)</span><input class="input amp-mask" id="addr" placeholder="e.g. RRRD2929" maxlength="8" style="text-transform:uppercase"></label>
+      <label class="field"><span>City</span>
+        <select class="input"><option>Riyadh</option><option>Jeddah</option><option>Dammam</option><option>Makkah</option><option>Madinah</option></select>
+      </label>
+      <p class="caption">Find your short address in the Absher or SPL app.</p>
+      <button class="btn mt16" type="submit">Submit</button>
+    </form>
+  </main>
+</div></div></div>
+<script>
+document.getElementById('f').addEventListener('submit', function (e) {
+  e.preventDefault();
+  Barq.appOnlySheet('National address', 'Address verification completes in the barq app.');
+});
+</script>
+</body>
+</html>

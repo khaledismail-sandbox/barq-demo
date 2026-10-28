@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Verify identity (guided)', allowFallback: true });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Verify identity (guided)</title>
+<link rel="icon" href="../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/app.css">
+<script src="../assets/data.js"></script>
+<script src="../assets/app.js"></script>
+<style>
+  .kg-progress { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 2px 0 10px; }
+  .kg-progress i { height: 6px; border-radius: 3px; background: var(--line); transition: background .3s ease; }
+  .kg-progress i.done { background: var(--green); }
+  .kg-progress i.now { background: var(--ink); }
+  .kg-meta { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+  .kg-meta .step { font-weight: 700; }
+  .kg-togo { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--yellow); font-weight: 700; font-size: 13px; }
+  .kg-momentum { margin: 12px 0 14px; font-size: 20px; font-weight: 800; letter-spacing: -.3px; }
+  .kg-transfer { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--blue-bg); font-size: 13px; margin-bottom: 14px; }
+  .kg-item { background: var(--surface); border-radius: var(--radius-card); padding: 16px; }
+  .kg-item + .kg-item { margin-top: 12px; }
+  .kg-item-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .kg-item-head b { font-size: 15px; }
+  .kg-tick { width: 24px; height: 24px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: var(--line); color: #fff; transition: background .2s ease; }
+  .kg-tick.on { background: var(--green); }
+  .kg-prefill { font-size: 11px; font-weight: 600; color: var(--teal); background: var(--blue-bg); padding: 3px 8px; border-radius: 999px; margin-left: 6px; }
+  .kg-field-err { color: var(--danger); font-size: 12px; margin-top: 6px; }
+  .kg-input-err { border-color: var(--danger) !important; }
+  .kg-status { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; font-weight: 600; min-height: 22px; }
+  .kg-status.wait { color: var(--teal); }
+  .kg-status.ok { color: var(--green); }
+  .kg-spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255, 255, 255, .35); border-top-color: #fff; animation: kgspin .7s linear infinite; }
+  .kg-spin.dark { border-color: rgba(14, 129, 134, .25); border-top-color: var(--teal); }
+  @keyframes kgspin { to { transform: rotate(360deg); } }
+  .kg-code { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: var(--teal); color: #fff; font-weight: 800; font-size: 18px; }
+  .kg-selfie { height: 150px; border-radius: 14px; background: #111; display: flex; align-items: center; justify-content: center; color: var(--yellow); }
+  .kg-why { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; min-height: 16px; }
+  .kg-done { text-align: center; padding: 40px 12px; }
+  .kg-done .big { width: 88px; height: 88px; border-radius: 44px; background: var(--green-bg); color: var(--green); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+  .kg-step { animation: kgin .25s ease; }
+  @keyframes kgin { from { opacity: 0; transform: translateX(16px); } }
+</style>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" id="prev" aria-label="Previous step" data-icon="back"></button><div class="tb-title">Verify identity</div><div class="tb-spacer"></div></header>
+  <main class="content" id="main">
+    <div id="flow">
+      <div class="kg-progress" id="bar"><i></i><i></i><i></i><i></i></div>
+      <div class="kg-meta"><span class="step" id="stepLbl">Step 1 of 4</span><span class="kg-togo" id="togo">⚡ 8 items to go</span></div>
+      <div class="kg-momentum" id="momentum">Let’s get you verified</div>
+      <div class="kg-transfer" id="transfer"></div>
+
+      <!-- Step 1: ID type + ID number -->
+      <section class="kg-step" data-step="1">
+        <div class="kg-item">
+          <div class="kg-item-head"><b>ID type <span class="kg-prefill">Prefilled</span></b><span class="kg-tick" data-tick="idType" data-icon="check" data-size="14"></span></div>
+          <div class="chips" id="idType">
+            <button type="button" class="chip" data-v="iqama">Iqama</button>
+            <button type="button" class="chip" data-v="national_id">National ID</button>
+          </div>
+        </div>
+        <div class="kg-item">
+          <div class="kg-item-head"><b>ID / Iqama number</b><span class="kg-tick" data-tick="idNumber" data-icon="check" data-size="14"></span></div>
+          <input class="input amp-mask" id="idNumber" inputmode="numeric" maxlength="10" placeholder="10 digits, starts with 1 or 2" autocomplete="off">
+          <div class="kg-field-err" id="idErr" hidden></div>
+        </div>
+      </section>
+
+      <!-- Step 2: date of birth + nationality -->
+      <section class="kg-step" data-step="2" hidden>
+        <div class="kg-item">
+          <div class="kg-item-head"><b>Date of birth <span class="kg-prefill">Prefilled</span></b><span class="kg-tick" data-tick="dob" data-icon="check" data-size="14"></span></div>
+          <input class="input amp-mask" id="dob" value="12/03/1994" inputmode="numeric" placeholder="DD/MM/YYYY" autocomplete="off">
+          <div class="kg-field-err" id="dobErr" hidden></div>
+        </div>
+        <div class="kg-item">
+          <div class="kg-item-head"><b>Nationality <span class="kg-prefill">Prefilled</span></b><span class="kg-tick" data-tick="nationality" data-icon="check" data-size="14"></span></div>
+          <div class="chips" id="nationality">
+            <button type="button" class="chip" data-v="Pakistan">🇵🇰 Pakistan</button>
+            <button type="button" class="chip" data-v="India">🇮🇳 India</button>
+            <button type="button" class="chip" data-v="Egypt">🇪🇬 Egypt</button>
+            <button type="button" class="chip" data-v="Philippines">🇵🇭 Philippines</button>
+            <button type="button" class="chip" data-v="Bangladesh">🇧🇩 Bangladesh</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 3: Nafath consent + Nafath approval -->
+      <section class="kg-step" data-step="3" hidden>
+        <div class="kg-item">
+          <div class="kg-item-head"><b>Nafath consent</b><span class="kg-tick" data-tick="consent" data-icon="check" data-size="14"></span></div>
+          <label class="check"><input type="checkbox" id="consent"><span>I consent to Barraq Finance Company retrieving my identity information from Nafath.</span></label>
+        </div>
+        <div class="kg-item">
+          <div class="kg-item-head"><b>Nafath approval</b><span class="kg-tick" data-tick="nafath" data-icon="check" data-size="14"></span></div>
+          <button class="btn" id="nafathBtn" type="button" disabled>Verify with Nafath</button>
+          <div class="kg-why" id="nafathWhy">Tick consent to verify</div>
+          <div class="kg-status" id="nafathStatus" hidden></div>
+        </div>
+      </section>
+
+      <!-- Step 4: selfie + short national address -->
+      <section class="kg-step" data-step="4" hidden>
+        <div class="kg-item">
+          <div class="kg-item-head"><b>Selfie</b><span class="kg-tick" data-tick="selfie" data-icon="check" data-size="14"></span></div>
+          <div class="kg-selfie amp-block" id="selfieBox"><span data-icon="camera" data-size="36"></span></div>
+          <button class="btn secondary mt12" id="selfieBtn" type="button">Take selfie</button>
+          <div class="kg-status" id="selfieStatus" hidden></div>
+        </div>
+        <div class="kg-item">
+          <div class="kg-item-head"><b>Short national address</b><span class="kg-tick" data-tick="address" data-icon="check" data-size="14"></span></div>
+          <div class="chips" id="city">
+            <button type="button" class="chip" data-v="Riyadh">Riyadh</button>
+            <button type="button" class="chip" data-v="Jeddah">Jeddah</button>
+            <button type="button" class="chip" data-v="Dammam">Dammam</button>
+            <button type="button" class="chip" data-v="Makkah">Makkah</button>
+          </div>
+          <input class="input amp-mask mt12" id="addr" maxlength="8" placeholder="Short address, e.g. RRRD2929" style="text-transform:uppercase" autocomplete="off">
+          <div class="kg-field-err" id="addrErr" hidden></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="kg-done" id="done" hidden>
+      <div class="big"><span data-icon="check" data-size="44"></span></div>
+      <div class="title-md">You’re verified ⚡</div>
+      <p class="sub mt8" id="doneMsg">Your transfer is on its way.</p>
+      <button class="btn secondary mt24" id="restart" type="button">Start again</button>
+    </div>
+  </main>
+  <div class="footer-cta" id="footer">
+    <button class="btn" id="next" type="button" disabled>Continue</button>
+    <div class="kg-why" id="why"></div>
+  </div>
+</div></div></div>
+<script>
+(function () {
+  var p = BarqAmp.persona();
+  if (!p) return;
+  var D = BarqData, def = D.personaDefaults[p.persona];
+  // Read-only: the fallback persona must never write to localStorage.
+  var stored = p.fallback ? null : Barq.get('beneficiary');
+  var ben = stored && stored.name ? stored : D.recipient(def.recipient);
+  var amt = (!p.fallback && Number(Barq.get('amount'))) || def.amount;
+  document.getElementById('transfer').innerHTML = Barq.avatar(ben.name, ben.corridor) + '<div class="grow"><div class="caption">Your transfer is waiting</div><b>' + Barq.money(amt) + ' SAR to ' + Barq.esc(ben.name) + '</b></div>';
+  document.getElementById('doneMsg').textContent = Barq.money(amt) + ' SAR to ' + ben.name + ' is on its way.';
+
+  var s = {
+    idType: 'iqama', idNumber: '', dob: '12/03/1994', nationality: D.corridor(ben.corridor).country,
+    consent: false, nafath: false, selfie: false, city: '', addr: ''
+  };
+  var ITEMS = ['idType', 'idNumber', 'dob', 'nationality', 'consent', 'nafath', 'selfie', 'address'];
+  var STEP_ITEMS = { 1: ['idType', 'idNumber'], 2: ['dob', 'nationality'], 3: ['consent', 'nafath'], 4: ['selfie', 'address'] };
+  var step = 1;
+
+  function valid(k) {
+    switch (k) {
+      case 'idType': return !!s.idType;
+      case 'idNumber': return /^[12]\d{9}$/.test(s.idNumber);
+      case 'dob': return /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d\d$/.test(s.dob);
+      case 'nationality': return !!s.nationality;
+      case 'consent': return s.consent;
+      case 'nafath': return s.nafath;
+      case 'selfie': return s.selfie;
+      case 'address': return !!s.city && /^[A-Z]{4}\d{4}$/.test(s.addr);
+    }
+  }
+  function remaining() { return ITEMS.filter(function (k) { return !valid(k); }).length; }
+
+  function reason() {
+    if (step === 1) return !valid('idNumber') ? 'Enter your 10-digit ID number to continue' : '';
+    if (step === 2) return !valid('dob') ? 'Check your date of birth to continue' : !valid('nationality') ? 'Pick your nationality to continue' : '';
+    if (step === 3) return !s.consent ? 'Tick consent to continue' : !s.nafath ? 'Approve in Nafath to continue' : '';
+    if (step === 4) return !s.selfie ? 'Take your selfie to continue' : !s.city ? 'Pick your city to continue' : !valid('address') ? 'Add your short address to continue' : '';
+  }
+
+  function momentum(n) {
+    if (step === 4) return 'Last step, your transfer is waiting';
+    if (n === 0) return 'All set — tap continue ⚡';
+    if (n <= 3) return 'Nice — just ' + n + ' to go ⚡';
+    if (step === 1) return 'Let’s get you verified';
+    return 'Great progress — keep going';
+  }
+
+  function chips(id, key) {
+    var el = document.getElementById(id);
+    function paint() { el.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('active', c.getAttribute('data-v') === s[key]); }); }
+    paint();
+    el.addEventListener('click', function (e) {
+      var c = e.target.closest('.chip'); if (!c) return;
+      s[key] = c.getAttribute('data-v'); paint(); render();
+    });
+  }
+
+  function render() {
+    var n = remaining();
+    document.querySelectorAll('.kg-step').forEach(function (sec) { sec.hidden = +sec.getAttribute('data-step') !== step; });
+    document.querySelectorAll('#bar i').forEach(function (b, i) {
+      b.className = i + 1 < step ? 'done' : i + 1 === step ? 'now' : '';
+    });
+    document.getElementById('stepLbl').textContent = 'Step ' + step + ' of 4';
+    document.getElementById('togo').textContent = n === 0 ? '⚡ All items done' : '⚡ ' + n + (n === 1 ? ' item' : ' items') + ' to go';
+    document.getElementById('momentum').textContent = momentum(n);
+    ITEMS.forEach(function (k) {
+      var t = document.querySelector('[data-tick="' + k + '"]');
+      if (t) t.classList.toggle('on', !!valid(k));
+    });
+    var r = reason();
+    var next = document.getElementById('next');
+    next.disabled = !!r;
+    next.textContent = step === 4 ? 'Finish & send money' : 'Continue';
+    document.getElementById('why').textContent = r || '';
+    var nb = document.getElementById('nafathBtn');
+    if (!s.nafath && !nb.dataset.busy) {
+      nb.disabled = !s.consent;
+      document.getElementById('nafathWhy').textContent = s.consent ? '' : 'Tick consent to verify';
+    }
+  }
+
+  function fireStep() {
+    BarqAmp.track('KYC Guided Flow Viewed', { kyc_step: step, items_remaining: remaining() });
+  }
+
+  function fieldErr(input, errId, msg) {
+    var e = document.getElementById(errId);
+    e.hidden = !msg; e.textContent = msg || '';
+    input.classList.toggle('kg-input-err', !!msg);
+  }
+
+  chips('idType', 'idType');
+  chips('nationality', 'nationality');
+  chips('city', 'city');
+
+  var idEl = document.getElementById('idNumber');
+  idEl.addEventListener('input', function () {
+    s.idNumber = idEl.value.replace(/\D/g, '');
+    if (idEl.value !== s.idNumber) idEl.value = s.idNumber;
+    var msg = '';
+    if (s.idNumber && !/^[12]/.test(s.idNumber)) msg = 'ID numbers start with 1 (National ID) or 2 (Iqama).';
+    else if (s.idNumber.length === 10 && !valid('idNumber')) msg = 'That number doesn’t look right.';
+    fieldErr(idEl, 'idErr', msg);
+    render();
+  });
+  idEl.addEventListener('blur', function () {
+    if (s.idNumber && s.idNumber.length < 10) fieldErr(idEl, 'idErr', 'Enter all 10 digits (' + s.idNumber.length + ' so far).');
+  });
+
+  var dobEl = document.getElementById('dob');
+  dobEl.addEventListener('input', function () {
+    s.dob = dobEl.value.trim();
+    fieldErr(dobEl, 'dobErr', s.dob.length >= 10 && !valid('dob') ? 'Use the format DD/MM/YYYY.' : '');
+    render();
+  });
+
+  document.getElementById('consent').addEventListener('change', function () { s.consent = this.checked; render(); });
+
+  var nb = document.getElementById('nafathBtn'), ns = document.getElementById('nafathStatus');
+  nb.addEventListener('click', function () {
+    if (!s.consent || s.nafath) return;
+    nb.dataset.busy = '1';
+    nb.disabled = true;
+    nb.innerHTML = '<span class="kg-spin"></span>Sending request…';
+    ns.hidden = false;
+    ns.className = 'kg-status wait';
+    ns.innerHTML = '<span class="kg-spin dark"></span>Open Nafath and pick <span class="kg-code" style="width:32px;height:32px;font-size:15px;margin:0 4px">42</span> to approve';
+    setTimeout(function () {
+      s.nafath = true;
+      delete nb.dataset.busy;
+      nb.innerHTML = Barq.icon('check', 18) + 'Approved';
+      ns.className = 'kg-status ok';
+      ns.innerHTML = Barq.icon('check', 18) + 'Approved on Nafath — identity confirmed';
+      render();
+    }, 2200);
+  });
+
+  var sb = document.getElementById('selfieBtn'), ss = document.getElementById('selfieStatus');
+  sb.addEventListener('click', function () {
+    if (s.selfie) return;
+    sb.disabled = true;
+    sb.innerHTML = '<span class="kg-spin dark"></span>Checking…';
+    ss.hidden = false; ss.className = 'kg-status wait'; ss.textContent = 'Hold still — matching your face to your ID';
+    setTimeout(function () {
+      s.selfie = true;
+      sb.innerHTML = Barq.icon('check', 18) + 'Selfie matched';
+      ss.className = 'kg-status ok'; ss.innerHTML = Barq.icon('check', 18) + 'Looks great — selfie matched';
+      document.getElementById('selfieBox').innerHTML = Barq.icon('check', 40);
+      render();
+    }, 1400);
+  });
+
+  var addrEl = document.getElementById('addr');
+  addrEl.addEventListener('input', function () {
+    s.addr = addrEl.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    fieldErr(addrEl, 'addrErr', s.addr.length === 8 && !/^[A-Z]{4}\d{4}$/.test(s.addr) ? '4 letters then 4 digits, e.g. RRRD2929.' : '');
+    render();
+  });
+
+  document.getElementById('next').addEventListener('click', function () {
+    if (reason()) return;
+    if (step < 4) {
+      step++;
+      render();
+      document.getElementById('main').scrollTop = 0;
+      fireStep();
+    } else {
+      document.getElementById('flow').hidden = true;
+      document.getElementById('footer').hidden = true;
+      document.getElementById('done').hidden = false;
+    }
+  });
+  document.getElementById('prev').addEventListener('click', function () {
+    if (!document.getElementById('done').hidden) return;
+    if (step > 1) { step--; render(); fireStep(); }
+  });
+  document.getElementById('restart').addEventListener('click', function () { location.reload(); });
+
+  render();
+  fireStep();
+})();
+</script>
+</body>
+</html>

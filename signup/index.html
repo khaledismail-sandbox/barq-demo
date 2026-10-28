@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../assets/amp.js"></script>
+<script>BarqAmp.bootPublic();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Create account</title>
+<link rel="icon" href="../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/app.css">
+<script src="../assets/data.js"></script>
+<script src="../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../" aria-label="Back"></button><div class="tb-title"></div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <h1 class="title-lg">Create your barq account</h1>
+    <p class="sub">Send money home to +200 countries. Your first transfer is on us — 0 SAR fee.</p>
+    <form id="f" class="mt24" autocomplete="off">
+      <label class="field"><span>Your name</span><input class="input" id="name" required placeholder="e.g. Khaled"></label>
+      <label class="field"><span>Demo number</span><input class="input" id="demo" type="number" min="1" value="1" inputmode="numeric"></label>
+      <label class="field"><span>Mobile number</span>
+        <div class="input-group">
+          <span class="input" style="flex:0 0 auto;width:auto;display:flex;align-items:center;gap:6px">🇸🇦 +966</span>
+          <input class="input" id="phone" inputmode="tel" placeholder="5X XXX XXXX" value="55 123 4567">
+        </div>
+        <div class="helper" id="phoneHelp">We'll send a one-time code by SMS.</div>
+      </label>
+      <div class="field"><span>I'll verify with</span>
+        <div class="chips" id="idtype">
+          <button type="button" class="chip active" data-v="iqama">Iqama</button>
+          <button type="button" class="chip" data-v="national_id">National ID</button>
+        </div>
+      </div>
+      <div class="card tint-blue mt16">
+        <div class="caption">Your demo user ID</div>
+        <div class="strong mt8" id="uid" style="font-family:ui-monospace,Menlo,monospace;font-size:14px;word-break:break-all">—</div>
+        <div class="caption mt8">Persona: new unverified customer</div>
+      </div>
+      <button class="btn mt24" type="submit">Create account</button>
+    </form>
+  </main>
+</div></div></div>
+<script>
+(function () {
+  var nameEl = document.getElementById('name'), demoEl = document.getElementById('demo'), uidEl = document.getElementById('uid');
+  var phoneEl = document.getElementById('phone'), help = document.getElementById('phoneHelp');
+  var idType = 'iqama';
+  function upd() { uidEl.textContent = BarqAmp.generateUserId(nameEl.value, parseInt(demoEl.value, 10) || 1, 'n'); }
+  nameEl.addEventListener('input', upd); demoEl.addEventListener('input', upd); upd();
+  document.getElementById('idtype').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    this.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('active', c === b); });
+    idType = b.getAttribute('data-v');
+  });
+  document.getElementById('f').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!nameEl.value.trim()) { nameEl.focus(); return; }
+    var digits = phoneEl.value.replace(/\D/g, '');
+    if (!/^5\d{8}$/.test(digits)) {
+      help.textContent = 'Enter a Saudi mobile number: 9 digits starting with 5.';
+      help.className = 'helper err';
+      phoneEl.focus();
+      return;
+    }
+    BarqAmp.startPersona('new_unverified', nameEl.value, demoEl.value);
+    BarqAmp.trackThenGo('Account Created', { signup_method: 'phone_otp', id_type: idType }, '../home/');
+  });
+})();
+</script>
+</body>
+</html>

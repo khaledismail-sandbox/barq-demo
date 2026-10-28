@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Wallet limits' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Wallet limits</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../../home/" aria-label="Back"></button><div class="tb-title">Wallet limits</div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <div class="row" style="margin:4px 0 14px"><h1 class="title-lg grow" style="margin:0">Wallet limits</h1><span class="badge dark" id="tier">—</span></div>
+    <div class="card" id="sections"></div>
+    <p class="caption mt12" id="note"></p>
+  </main>
+  <nav class="tabbar" data-active="more"></nav>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var full = Barq.isVerified();
+  var rows = full ? [
+    { k: 'Daily transfers', used: 1500, max: 20000 },
+    { k: 'Monthly transfers', used: 12350, max: 100000 },
+    { k: 'International transfers / month', used: 9000, max: 60000 }
+  ] : [
+    { k: 'Daily transfers', used: 0, max: 2500 },
+    { k: 'Monthly transfers', used: 0, max: 20000 },
+    { k: 'International transfers / month', used: 0, max: 0 }
+  ];
+  document.getElementById('tier').textContent = full ? 'Full tier' : 'Basic tier';
+  document.getElementById('note').textContent = full ? 'Your identity is verified with Nafath — you have the highest wallet limits.' : 'Verify your identity with Nafath to unlock international transfers and higher limits.';
+  document.getElementById('sections').innerHTML = rows.map(function (r, i) {
+    var pct = r.max ? Math.round(r.used / r.max * 1000) / 10 : 0;
+    return '<div class="limit-section"' + (i ? ' style="border-top:1px solid var(--line);padding-top:14px;margin-top:14px"' : '') + '>' +
+      '<div class="row"><span class="grow strong" style="font-size:14px">' + r.k + '</span><span class="caption">' + Barq.money(r.used, 0) + ' / ' + (r.max ? Barq.money(r.max, 0) : '—') + ' SAR</span></div>' +
+      '<div class="bar"><i style="width:' + pct + '%"></i></div></div>';
+  }).join('');
+  var monthly = rows[1];
+  BarqAmp.track('Transfer Limits Viewed', {
+    quote_id: Barq.quote().quote_id,
+    limits_sections_read: document.querySelectorAll('.limit-section').length,
+    limit_used_pct: Math.round(monthly.used / monthly.max * 10000) / 100
+  });
+})();
+</script>
+</body>
+</html>

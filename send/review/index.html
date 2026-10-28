@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Review transfer' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Review transfer</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../details/" aria-label="Back"></button><div class="tb-title">Review transfer</div><button class="icon-btn" id="cancel" aria-label="Cancel transfer" data-icon="close"></button></header>
+  <main class="content">
+    <div class="card" style="text-align:center;padding:22px 16px">
+      <div id="av" style="display:flex;justify-content:center"></div>
+      <div class="strong mt12" style="font-size:18px" id="nm">—</div>
+      <div class="caption" id="dt">—</div>
+      <div style="font-size:34px;font-weight:800;letter-spacing:-1px;margin-top:14px"><span id="amt">—</span> <small style="font-size:17px">SAR</small></div>
+      <div class="sub" id="recv">—</div>
+    </div>
+
+    <div class="card mt12" style="padding:4px 16px">
+      <div class="kv"><span class="k">You send</span><span class="v" id="send">—</span></div>
+      <div class="kv"><span class="k">Transfer fee</span><span class="v"><span class="strike">15.00</span>0 SAR <span class="badge" style="margin-left:4px">Waived</span></span></div>
+      <div class="kv"><span class="k">VAT</span><span class="v">0.00 SAR</span></div>
+      <div class="kv"><span class="k">Exchange rate</span><span class="v" id="rate">—</span></div>
+      <div class="kv"><span class="k">Arrives</span><span class="v" id="speed">—</span></div>
+      <div class="kv" id="refRow" hidden><span class="k">Referral cashback</span><span class="v" style="color:var(--green)" id="ref">—</span></div>
+      <div class="kv"><span class="k strong" style="color:var(--ink)">Total to pay</span><span class="v" style="font-size:16px" id="total">—</span></div>
+    </div>
+
+    <div class="card mt12 row">
+      <span class="logo-mark" style="width:40px;height:40px;border-radius:11px"><img src="../../assets/icon.png" alt=""></span>
+      <div class="grow"><div class="caption">Pay from</div><div class="strong">barq Wallet <span class="amp-mask">•••• 2293</span></div></div>
+      <div class="caption">Available Balance<br><b id="bal" style="color:var(--ink)">—</b></div>
+    </div>
+    <p class="caption mt12">By tapping Confirm &amp; send you agree to barq’s international transfer terms. Quote <span id="qid"></span>.</p>
+  </main>
+  <div class="footer-cta"><button class="btn" id="confirm">Confirm &amp; send</button></div>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var b = Barq.beneficiary(), q = Barq.quote(), c = BarqData.corridor(q.corridor), t = Barq.totals(q), ref = Barq.referral();
+  var SPEED = { instant: 'In seconds ⚡', same_day: 'Same day', next_day: 'Next business day' };
+  var verified = Barq.isVerified();
+  document.getElementById('av').innerHTML = Barq.avatar(b.name, b.corridor, 'lg');
+  document.getElementById('nm').textContent = b.name;
+  document.getElementById('dt').textContent = c.country + ' · ' + b.method + ' · ' + b.detail;
+  document.getElementById('amt').textContent = Barq.money(t.send_total_sar);
+  document.getElementById('recv').textContent = b.name.split(' ')[0] + ' receives ' + Barq.money(t.receive) + ' ' + c.currency;
+  document.getElementById('send').textContent = Barq.money(q.send_amount_sar) + ' SAR';
+  document.getElementById('rate').textContent = '1 SAR = ' + c.rate.toFixed(2) + ' ' + c.currency;
+  document.getElementById('speed').textContent = SPEED[q.payout_speed];
+  document.getElementById('total').textContent = Barq.money(t.send_total_sar) + ' SAR';
+  document.getElementById('bal').textContent = Barq.money(Barq.defaults().balance) + ' SAR';
+  document.getElementById('qid').textContent = q.quote_id;
+  if (ref && ref.valid) { document.getElementById('refRow').hidden = false; document.getElementById('ref').textContent = '+' + Barq.money(ref.bonus) + ' SAR'; }
+
+  BarqAmp.track('Transfer Review Viewed', {
+    quote_id: q.quote_id,
+    send_total_sar: t.send_total_sar,
+    verified_customer: verified,
+    fee_waived: true
+  });
+
+  document.getElementById('cancel').addEventListener('click', function () {
+    BarqAmp.trackThenGo('Transfer Abandoned', {
+      quote_id: q.quote_id,
+      send_total_sar: t.send_total_sar,
+      abandonment_trigger: 'other',
+      referral_attempted: !!ref,
+      fx_margin_at_risk_sar: t.fx_margin_sar
+    }, '../../home/');
+  });
+
+  var sent = false;
+  document.getElementById('confirm').addEventListener('click', function () {
+    if (sent) return;
+    sent = true;
+    var tid = '';
+    for (var i = 0; i < 8; i++) tid += '0123456789ABCDEF'[Math.floor(Math.random() * 16)];
+    Barq.set('last_transfer', {
+      transfer_id: tid, quote_id: q.quote_id, corridor: q.corridor, recipient: b, amount: t.send_total_sar,
+      receive: t.receive, currency: c.currency, ts: Date.now()
+    });
+    var props = {
+      transfer_id: tid,
+      quote_id: q.quote_id,
+      corridor: q.corridor,
+      send_total_sar: t.send_total_sar,
+      transfer_fee_sar: BarqData.FEE_SAR,
+      is_first_transfer: !verified,
+      referral_applied: !!(ref && ref.valid),
+      fx_margin_pct: BarqData.FX_MARGIN_PCT,
+      fx_margin_sar: t.fx_margin_sar
+    };
+    Barq.del('quote');
+    Barq.del('referral');
+    BarqAmp.trackThenGo('International Transfer Completed', props, '../success/', {
+      revenue: t.fx_margin_sar, price: t.fx_margin_sar, quantity: 1, revenueType: 'fx_margin'
+    });
+  });
+})();
+</script>
+</body>
+</html>

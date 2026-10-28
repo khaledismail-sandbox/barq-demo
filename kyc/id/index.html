@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Verify identity' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Verify identity</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../../send/details/" aria-label="Back"></button><div class="tb-title">Verify identity</div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <h1 class="title-lg">Verify your identity</h1>
+    <p class="sub">Before your first international transfer, we need to confirm who you are. This is required by the Saudi Central Bank.</p>
+    <form id="f" class="card mt16" autocomplete="off">
+      <div class="field"><span>ID type</span>
+        <div class="chips" id="idtype">
+          <button type="button" class="chip active" data-v="iqama">Iqama</button>
+          <button type="button" class="chip" data-v="national_id">National ID</button>
+        </div>
+      </div>
+      <label class="field"><span>ID / Iqama number</span><input class="input amp-mask" type="password" id="idno" value="2384567141" inputmode="numeric" aria-label="ID or Iqama number"></label>
+      <label class="field"><span>Date of birth</span><input class="input amp-mask" type="password" id="dob" value="12/03/1994" aria-label="Date of birth"></label>
+      <label class="field"><span>Nationality</span>
+        <select class="input" id="nat">
+          <option>Pakistan</option><option>India</option><option>Egypt</option><option>Philippines</option><option>Bangladesh</option><option>Saudi Arabia</option>
+        </select>
+      </label>
+      <p class="caption">Your details are encrypted and only shared with Nafath to confirm your identity.</p>
+    </form>
+  </main>
+  <div class="footer-cta"><a class="btn" href="../nafath/">Next</a></div>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var corr = BarqData.corridor(Barq.beneficiary().corridor);
+  var nat = document.getElementById('nat');
+  for (var i = 0; i < nat.options.length; i++) if (nat.options[i].text === corr.country) nat.selectedIndex = i;
+  document.getElementById('idtype').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    this.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('active', c === b); });
+  });
+})();
+</script>
+</body>
+</html>

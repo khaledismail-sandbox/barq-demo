@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Home' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Home</title>
+<link rel="icon" href="../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/app.css">
+<script src="../assets/data.js"></script>
+<script src="../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <main class="content">
+    <div class="home-head">
+      <span class="avatar" id="me" style="background:var(--ink);color:var(--yellow)">—</span>
+      <div class="grow"><div class="hello" id="hello">Good evening</div><div class="name" id="name">—</div></div>
+      <button class="icon-btn" id="qr" aria-label="Scan to pay" data-icon="qr"></button>
+    </div>
+
+    <section class="wallet-card" aria-label="Wallet">
+      <span class="mark" data-mark></span>
+      <div class="label">Available Balance</div>
+      <div class="amount"><span id="bal">0.00</span> <small>SAR</small></div>
+      <div class="meta">
+        <span>Current Balance <b id="cur">0.00</b> SAR</span>
+        <span>barq Wallet <b class="amp-mask">•••• 2293</b></span>
+      </div>
+    </section>
+
+    <div class="actions">
+      <a class="action primary" href="../send/" id="sendBtn"><span data-icon="send"></span>Send</a>
+      <button class="action" data-app="Add money"><span data-icon="plus"></span>Add money</button>
+      <button class="action" data-app="Request"><span data-icon="down"></span>Request</button>
+      <button class="action" data-app="Pay"><span data-icon="qr"></span>Pay</button>
+    </div>
+
+    <a class="promo card-link mt16" href="../send/" style="display:block">
+      <div class="promo-top">
+        <span class="globe" aria-hidden="true">🌍</span>
+        <h3>Lowest</h3>
+        <p>Exchange rates<br>in Saudi Arabia</p>
+        <div class="caption mt8" style="color:var(--teal);font-weight:600">Best exchange rates in the Kingdom</div>
+      </div>
+      <div class="promo-bottom">
+        <span class="btn" style="min-height:46px">Send money home · 0 SAR fee</span>
+      </div>
+    </a>
+
+    <a class="card wheel-card card-link mt12" href="../rewards/wheel/" id="wheelCard">
+      <span class="wheel-mini" aria-hidden="true" style="border-radius:50%;background:conic-gradient(var(--yellow) 0 60deg,var(--ink) 0 120deg,#fff 0 180deg,var(--yellow) 0 240deg,var(--ink) 0 300deg,#fff 0 360deg);box-shadow:0 0 0 4px #fff"></span>
+      <div class="grow">
+        <div class="strong">Spin the cashback wheel</div>
+        <div class="sub" style="font-size:13px">Win up to 25% cashback in the barq game center ⚡</div>
+      </div>
+      <span class="chev" data-icon="chev" data-size="20"></span>
+    </a>
+
+    <div class="section-head"><span>Recent transactions</span><a href="../send/">View all</a></div>
+    <div class="card" id="txns" style="padding:6px 16px"></div>
+  </main>
+  <nav class="tabbar" data-active="home"></nav>
+</div></div></div>
+<script>
+(function () {
+  var p = Barq.persona(); if (!p) return;
+  var d = Barq.defaults();
+  var verified = Barq.isVerified();
+  document.getElementById('me').textContent = Barq.initials(p.name);
+  document.getElementById('name').textContent = p.name;
+  var h = new Date().getHours();
+  document.getElementById('hello').textContent = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('bal').textContent = Barq.money(d.balance);
+  document.getElementById('cur').textContent = Barq.money(verified ? d.balance + 250 : d.balance);
+
+  var tx = verified ? [
+    { ic: 'transfer', t: 'Ramesh Kumar · India', s: 'International transfer', a: '-1,500.00', cls: 'neg' },
+    { ic: 'gift', t: 'Cashback wheel', s: 'Game center', a: '+5.00', cls: 'pos' },
+    { ic: 'bank', t: 'Salary deposit', s: 'Al Rajhi Bank', a: '+6,200.00', cls: 'pos' }
+  ] : [
+    { ic: 'bolt', t: 'Welcome to barq', s: 'Wallet opened', a: '+1,000.00', cls: 'pos' }
+  ];
+  document.getElementById('txns').innerHTML = tx.map(function (x) {
+    return '<div class="txn"><span class="ico">' + Barq.icon(x.ic, 20) + '</span><div class="grow"><div style="font-size:14px;font-weight:600">' + x.t + '</div><div class="caption">' + x.s + '</div></div><span class="amt ' + x.cls + '">' + x.a + ' SAR</span></div>';
+  }).join('');
+
+  document.getElementById('wheelCard').addEventListener('click', function () { Barq.set('wheel_from', 'home_card'); });
+  document.querySelectorAll('[data-app]').forEach(function (b) {
+    b.addEventListener('click', function () { Barq.appOnlySheet(b.getAttribute('data-app')); });
+  });
+  document.getElementById('qr').addEventListener('click', function () { Barq.appOnlySheet('Scan to pay'); });
+
+  BarqAmp.track('Wallet Home Viewed', {
+    referrer_source: BarqAmp.PERSONAS[p.persona].user.utm_medium,
+    is_returning: verified
+  });
+  window.addEventListener('load', function () { setTimeout(BarqAmp.sdkCheck, 500); });
+})();
+</script>
+</body>
+</html>

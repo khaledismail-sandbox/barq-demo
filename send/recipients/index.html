@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Beneficiaries' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Beneficiaries</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../" aria-label="Back"></button><div class="tb-title">Beneficiaries</div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <a class="card row card-link" href="../" id="corr"></a>
+
+    <form id="search" class="mt16" role="search">
+      <div class="input-group">
+        <input class="input" id="q" placeholder="Search name or bank" autocomplete="off">
+        <button class="btn sm" type="submit" aria-label="Search" style="min-height:52px">Search</button>
+      </div>
+    </form>
+    <div id="results" class="card mt12" hidden style="padding:4px 16px"></div>
+
+    <div class="section-head"><span>Suggested beneficiaries</span></div>
+    <div class="chips" id="suggested"></div>
+
+    <button class="btn secondary mt24" id="newBtn"><span data-icon="plus" data-size="20"></span>New beneficiary</button>
+
+    <form id="newForm" class="card mt12" hidden autocomplete="off">
+      <div class="title-md">New beneficiary</div>
+      <label class="field mt12"><span>Full name</span><input class="input" id="nbName" placeholder="As on their ID"></label>
+      <div class="field"><span>Receive by</span>
+        <div class="chips" id="nbMethod">
+          <button type="button" class="chip active" data-v="Bank Transfer">Bank Transfer</button>
+          <button type="button" class="chip" data-v="Cash Pick Up">Cash Pick Up</button>
+          <button type="button" class="chip" data-v="Digital Wallet">Digital Wallet</button>
+        </div>
+      </div>
+      <label class="field"><span>IBAN / account number</span><input class="input amp-mask" id="nbIban" placeholder="e.g. PK36 SCBL 0000 0011 2345 6702"></label>
+      <div class="helper err" id="nbErr" hidden></div>
+      <button class="btn" type="submit">Save beneficiary</button>
+    </form>
+  </main>
+  <nav class="tabbar" data-active="transfers"></nav>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var pk = Barq.personaKey();
+  var corridor = Barq.get('corridor') || Barq.beneficiary().corridor;
+  var c = BarqData.corridor(corridor);
+  document.getElementById('corr').innerHTML = '<span style="font-size:30px;line-height:1">' + c.flag + '</span><div class="grow"><div class="caption">Sending to</div><div class="strong">' + c.country + ' · ' + c.currency + '</div></div><span class="caption">Change</span>';
+
+  // Suggestions: this persona's own beneficiaries first ("personalised"), then shared ones.
+  var pool = BarqData.recipientsFor(pk, corridor).sort(function (a, b) { return (b.owner ? 1 : 0) - (a.owner ? 1 : 0); });
+  var sharedIdx = 0;
+  var suggestions = pool.map(function (r) {
+    var ctx = r.owner === pk ? 'personalised' : (sharedIdx++ === 0 ? 'similar' : 'trending');
+    return { r: r, ctx: ctx };
+  });
+  var sug = document.getElementById('suggested');
+  sug.innerHTML = suggestions.map(function (s, i) {
+    return '<button class="chip" data-i="' + i + '" style="padding-left:6px;min-height:52px"><span class="avatar" style="width:40px;height:40px">' + Barq.esc(Barq.initials(s.r.name)) + '</span><span style="text-align:left"><b>' + Barq.esc(s.r.name) + '</b><br><span class="caption">' + s.r.method + '</span></span></button>';
+  }).join('');
+  sug.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-i]'); if (!b) return;
+    var s = suggestions[+b.getAttribute('data-i')];
+    var q = Barq.selectBeneficiary(s.r);
+    BarqAmp.trackThenGo('Suggested Recipient Tapped', {
+      quote_id: q.quote_id,
+      corridor: q.corridor,
+      send_amount_sar: q.send_amount_sar,
+      suggestion_context: s.ctx,
+      position_in_list: +b.getAttribute('data-i') + 1
+    }, '../quote/');
+  });
+
+  var res = document.getElementById('results');
+  var found = [];
+  document.getElementById('search').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var term = document.getElementById('q').value.trim();
+    if (!term) return;
+    var t = term.toLowerCase();
+    found = BarqData.recipientsFor(pk, null).filter(function (r) {
+      return r.name.toLowerCase().indexOf(t) > -1 || r.detail.toLowerCase().indexOf(t) > -1;
+    });
+    res.hidden = false;
+    res.innerHTML = found.length ? found.map(function (r, i) {
+      return '<button class="list-row" data-f="' + i + '">' + Barq.avatar(r.name, r.corridor) + '<div class="grow"><div class="strong">' + Barq.esc(r.name) + '</div><div class="caption">' + r.method + ' · ' + r.detail + '</div></div><span class="chev">' + Barq.icon('chev', 18) + '</span></button>';
+    }).join('') : '<div class="list-row"><div class="sub">No beneficiaries match “' + Barq.esc(term) + '”. Add a new beneficiary below.</div></div>';
+    BarqAmp.track('Recipient Searched', { search_query: term, recipients_found: found.length, zero_results: found.length === 0 });
+  });
+  res.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-f]'); if (!b) return;
+    Barq.selectBeneficiary(found[+b.getAttribute('data-f')]);
+    location.href = '../quote/';
+  });
+
+  var form = document.getElementById('newForm'), method = 'Bank Transfer';
+  document.getElementById('newBtn').addEventListener('click', function () { form.hidden = false; document.getElementById('nbName').focus(); });
+  document.getElementById('nbMethod').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    this.querySelectorAll('.chip').forEach(function (x) { x.classList.toggle('active', x === b); });
+    method = b.getAttribute('data-v');
+  });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('nbName').value.trim();
+    var iban = document.getElementById('nbIban').value.replace(/\s/g, '');
+    var err = document.getElementById('nbErr');
+    if (name.length < 3) { err.hidden = false; err.textContent = 'Enter the beneficiary’s full name.'; return; }
+    if (iban.length < 8) { err.hidden = false; err.textContent = 'Enter a valid IBAN or account number.'; return; }
+    var rec = { name: name, corridor: corridor, method: method, detail: 'Account •••• ' + iban.slice(-4), owner: pk, custom: true };
+    var q = Barq.selectBeneficiary(rec);
+    BarqAmp.trackThenGo('Recipient Saved', { quote_id: q.quote_id, corridor: q.corridor }, '../quote/');
+  });
+})();
+</script>
+</body>
+</html>

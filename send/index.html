@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'International Transfer' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — International Transfer</title>
+<link rel="icon" href="../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/app.css">
+<script src="../assets/data.js"></script>
+<script src="../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../home/" aria-label="Back"></button><div class="tb-title"></div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <h1 class="title-lg">International Transfer</h1>
+    <div class="segment" role="tablist">
+      <button class="active">Send Money</button>
+      <button data-app="Transfer History">Transfer History</button>
+      <button data-app="Price Estimate">Price Estimate</button>
+    </div>
+    <div class="card tint-blue">
+      <div class="strong">Send money home to +200 countries</div>
+      <div class="sub mt8" style="font-size:13px">Send money your way: Cash Pick Up · Bank Transfer · Digital Wallet</div>
+    </div>
+    <div class="section-head"><span>Exchange rates · 1 SAR =</span></div>
+    <div class="chips scroll" id="sort">
+      <button class="chip active" data-v="popular">Popular</button>
+      <button class="chip" data-v="price_asc">Rate ↑</button>
+      <button class="chip" data-v="price_desc">Rate ↓</button>
+      <button class="chip" data-v="newest">Newest</button>
+    </div>
+    <div class="card mt12" id="list" style="padding:4px 16px"></div>
+    <p class="caption mt12">0 SAR transfer fee on every corridor. Rates refresh every 30 seconds.</p>
+  </main>
+  <nav class="tabbar" data-active="transfers"></nav>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var list = document.getElementById('list');
+  var SPEED = { instant: 'Arrives in seconds', same_day: 'Same day', next_day: 'Next day' };
+  function render(sort) {
+    var cs = BarqData.corridors.slice();
+    cs.sort(function (a, b) {
+      if (sort === 'price_asc') return a.rate - b.rate;
+      if (sort === 'price_desc') return b.rate - a.rate;
+      if (sort === 'newest') return b.added - a.added;
+      return a.popular - b.popular;
+    });
+    list.innerHTML = cs.map(function (c) {
+      return '<a class="list-row" href="recipients/" data-c="' + c.code + '">' +
+        '<span style="font-size:28px;line-height:1">' + c.flag + '</span>' +
+        '<div class="grow"><div class="strong" style="font-size:15px">' + c.country + '</div><div class="caption">' + SPEED[c.speed] + ' · 0 SAR fee</div></div>' +
+        '<div class="right"><div class="strong">' + c.rate.toFixed(2) + ' ' + c.currency + '</div></div>' +
+        '<span class="chev">' + Barq.icon('chev', 18) + '</span></a>';
+    }).join('');
+  }
+  render('popular');
+  list.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-c]'); if (a) Barq.set('corridor', a.getAttribute('data-c'));
+  });
+  document.getElementById('sort').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    this.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('active', c === b); });
+    render(b.getAttribute('data-v'));
+  });
+  document.querySelectorAll('[data-app]').forEach(function (b) {
+    b.addEventListener('click', function () { Barq.appOnlySheet(b.getAttribute('data-app')); });
+  });
+  BarqAmp.track('Exchange Rates Viewed', {
+    corridor: Barq.beneficiary().corridor,
+    corridors_shown: BarqData.corridors.length,
+    filter_used: false,
+    sort_applied: 'popular'
+  });
+})();
+</script>
+</body>
+</html>

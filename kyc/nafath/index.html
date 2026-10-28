@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Nafath approval' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Nafath approval</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" id="back" aria-label="Back" data-icon="back"></button><div class="tb-title">Nafath approval</div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <div class="nafath-hero">
+      <div class="nafath-logo">NAFATH</div>
+      <h1 class="title-md">Approve with Nafath</h1>
+      <p class="sub mt8">Open the Nafath app and choose the number shown below to confirm your identity.</p>
+      <div class="nafath-code" aria-label="Nafath number">––</div>
+    </div>
+
+    <div class="card tint-blue mt16 row">
+      <span id="benAv"></span>
+      <div class="grow"><div class="caption">Your transfer is waiting</div><div class="strong" id="sum">—</div></div>
+    </div>
+
+    <div class="mt16">
+      <button class="btn no-feedback" id="verify" type="button">Verify with Nafath</button>
+      <button class="btn mt12" id="cont" type="button">Continue</button>
+    </div>
+
+    <div class="section-head"><span>How Nafath approval works</span></div>
+    <div class="card">
+      <ol class="steps-list" style="margin:0;padding:0;list-style:none">
+        <li><span class="n">1</span><span>Tap <b>Verify with Nafath</b>. We send a request to the national Nafath platform.</span></li>
+        <li><span class="n">2</span><span>Open the Nafath app on this phone using your National ID or Iqama.</span></li>
+        <li><span class="n">3</span><span>Select the number displayed on this screen to approve the request.</span></li>
+        <li><span class="n">4</span><span>Come back to barq and tap <b>Continue</b> to finish your transfer.</span></li>
+      </ol>
+    </div>
+
+    <div class="card mt12">
+      <div class="row"><span data-icon="shield" style="color:var(--teal)"></span><div class="strong">Why we use Nafath</div></div>
+      <p class="sub mt8" style="font-size:13px">Nafath is the Kingdom’s unified national access platform. Verifying through it keeps your wallet secure and lets us lift your wallet limits for international transfers.</p>
+    </div>
+
+    <div class="card mt12">
+      <label class="check"><input type="checkbox" id="consent"><span>I consent to Barraq Finance Company retrieving my identity information from Nafath for verification.</span></label>
+    </div>
+
+    <button class="btn danger-text mt16" id="cancel" type="button">Cancel transfer</button>
+  </main>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var b = Barq.beneficiary(), q = Barq.quote(), t = Barq.totals(q);
+  document.getElementById('benAv').outerHTML = Barq.avatar(b.name, b.corridor);
+  document.getElementById('sum').textContent = Barq.money(t.send_total_sar) + ' SAR to ' + b.name;
+
+  // Friction by design: the verify button never responds; the second tap is a retry.
+  var taps = 0, retried = false;
+  document.getElementById('verify').addEventListener('click', function () {
+    taps++;
+    if (taps >= 2 && !retried) {
+      retried = true;
+      BarqAmp.track('Nafath Verification Retried', {
+        quote_id: q.quote_id,
+        send_amount_sar: q.send_amount_sar,
+        transfer_fee_sar: BarqData.FEE_SAR,
+        vat_sar: BarqData.VAT_SAR,
+        send_total_sar: t.send_total_sar,
+        fee_waived: true,
+        kyc_trigger: 'first_time'
+      });
+    }
+  });
+  // #cont intentionally has no handler: it looks enabled but never proceeds (dead clicks).
+
+  function abandon() {
+    BarqAmp.trackThenGo('Transfer Abandoned', {
+      quote_id: q.quote_id,
+      send_total_sar: t.send_total_sar,
+      abandonment_trigger: 'kyc_nafath_verification',
+      referral_attempted: !!Barq.referral(),
+      fx_margin_at_risk_sar: t.fx_margin_sar
+    }, '../../home/');
+  }
+  document.getElementById('back').addEventListener('click', abandon);
+  document.getElementById('cancel').addEventListener('click', abandon);
+})();
+</script>
+</body>
+</html>

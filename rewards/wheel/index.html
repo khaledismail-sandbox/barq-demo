@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Analytics + Session Replay (+ Experiment) — unified smart loader -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.js"></script>
+<!-- Web Experiment — required for the visual editor to attach -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.experiment.js"></script>
+<!-- Guides & Surveys -->
+<script src="https://cdn.amplitude.com/script/eaab296fb14408ea7bb00b1e58b41087.engagement.js"></script>
+<!-- the ONE analytics wrapper -->
+<script src="../../assets/amp.js"></script>
+<script>BarqAmp.boot({ title: 'Cashback wheel' });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>barq — Cashback wheel</title>
+<link rel="icon" href="../../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<script src="../../assets/data.js"></script>
+<script src="../../assets/app.js"></script>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="screen">
+  <div class="statusbar"></div>
+  <header class="topbar"><button class="icon-btn" data-back="../../home/" aria-label="Back"></button><div class="tb-title">Game center</div><div class="tb-spacer"></div></header>
+  <main class="content">
+    <div class="card" style="text-align:center;padding:20px 16px">
+      <div class="title-md">Cashback wheel ⚡</div>
+      <p class="sub mt8">Spin to win up to 25% cashback on your next transfer.</p>
+      <div class="wheel-wrap"><span class="wheel-pointer"></span><svg class="wheel" id="wheel" viewBox="-100 -100 200 200" aria-label="Cashback wheel"></svg></div>
+      <div class="mt16" id="result" style="min-height:44px"><span class="caption">1 free spin available today</span></div>
+      <button class="btn yellow mt12" id="spin">Spin</button>
+    </div>
+    <a class="btn secondary mt12" href="../../home/">Back to Home</a>
+  </main>
+  <nav class="tabbar" data-active="rewards"></nav>
+</div></div></div>
+<script>
+(function () {
+  if (!Barq.persona()) return;
+  var SEG = [
+    { pct: 10, sar: 1 }, { pct: 15, sar: 2 }, { pct: 20, sar: 5 },
+    { pct: 25, sar: 10 }, { pct: 15, sar: 5 }, { pct: 25, sar: 15 }
+  ];
+  var FILLS = ['var(--yellow)', 'var(--ink)', '#FFFFFF', 'var(--yellow)', 'var(--ink)', '#FFFFFF'];
+  var INKS = ['var(--ink)', 'var(--yellow)', 'var(--ink)', 'var(--ink)', 'var(--yellow)', 'var(--ink)'];
+  var w = document.getElementById('wheel'), html = '<circle r="99" fill="var(--ink)"/>';
+  SEG.forEach(function (s, i) {
+    var a0 = (i * 60 - 90 - 30) * Math.PI / 180, a1 = (i * 60 - 90 + 30) * Math.PI / 180, r = 94;
+    html += '<path d="M0 0L' + (r * Math.cos(a0)).toFixed(2) + ' ' + (r * Math.sin(a0)).toFixed(2) + 'A' + r + ' ' + r + ' 0 0 1 ' + (r * Math.cos(a1)).toFixed(2) + ' ' + (r * Math.sin(a1)).toFixed(2) + 'Z" fill="' + FILLS[i] + '"/>';
+    html += '<g transform="rotate(' + (i * 60) + ')"><text y="-58" text-anchor="middle" font-size="17" font-weight="800" fill="' + INKS[i] + '">' + s.pct + '%</text><text y="-40" text-anchor="middle" font-size="10" font-weight="600" fill="' + INKS[i] + '">' + s.sar + ' SAR</text></g>';
+  });
+  html += '<circle r="16" fill="var(--ink)"/><circle r="6" fill="var(--yellow)"/>';
+  w.innerHTML = html;
+
+  var placement = Barq.get('wheel_from') || 'rewards_tab';
+  var turns = 0, spinning = false;
+  document.getElementById('spin').addEventListener('click', function () {
+    if (spinning) return;
+    spinning = true;
+    var i = Math.floor(Math.random() * SEG.length), s = SEG[i];
+    turns += 1;
+    w.style.transform = 'rotate(' + (turns * 1440 - i * 60) + 'deg)';
+    document.getElementById('result').innerHTML = '<span class="caption">Spinning…</span>';
+    BarqAmp.track('Cashback Wheel Spun', { wheel_placement: placement, cashback_pct: s.pct, cashback_sar: s.sar });
+    Barq.set('wheel', s);
+    setTimeout(function () {
+      spinning = false;
+      document.getElementById('result').innerHTML = '<div class="strong" style="font-size:18px">You won ' + s.sar + ' SAR · ' + s.pct + '% cashback 🎉</div><div class="caption">Added to your next transfer</div>';
+      document.getElementById('spin').textContent = 'Spin again';
+    }, 3300);
+  });
+})();
+</script>
+</body>
+</html>

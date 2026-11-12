@@ -11,7 +11,7 @@
   var SR_CFG_URL = 'https://sr-client-cfg.amplitude.com/config/' + KEY + '?config_group=browser';
   var SCRIPT = document.currentScript;
   var ROOT = SCRIPT && SCRIPT.src ? SCRIPT.src.replace(/assets\/amp\.js(\?.*)?$/, '') : './';
-  var IDENTIFY_TIMEOUT_MS = 1500;
+  var READY_WAIT_MS = 8000;
   var NAV_WAIT_MS = 800;
   var REC_KEYS = { barq_rec: 1, barq_rec_log: 1, barq_rec_wire: 1 };
 
@@ -63,7 +63,11 @@
     '[Amplitude] Dead Click': 1
   };
 
-  var state = { fallback: null, inited: false, ready: false, queue: [], pageStart: Date.now() };
+  var state = { fallback: null, inited: false, ready: false, queue: [], pending: [], pageStart: Date.now(), navigating: false };
+
+  function sdkPromise(result) {
+    return result && result.promise ? result.promise : Promise.resolve();
+  }
 
   /* ---------- helpers ---------- */
 
@@ -202,7 +206,7 @@
     if (window.engagement) a.add(window.engagement.plugin());
     a.add(geoPlugin);
 
-    a.init(KEY, userId, {
+    var initResult = a.init(KEY, userId, {
       optOut: !!optOut,
       fetchRemoteConfig: true,
       autocapture: {
@@ -215,6 +219,7 @@
         frustrationInteractions: true
       }
     });
+    state.initPromise = sdkPromise(initResult);
     state.inited = true;
     return true;
   }
@@ -227,31 +232,33 @@
   }
 
   function identifyThenRelease(p) {
-    var a = amp();
-    a.setUserId(p.userId);
-    var cfg = PERSONAS[p.persona];
-    var props = { persona: p.persona };
-    for (var k in cfg.user) props[k] = cfg.user[k];
-    var once = {
-      initial_utm_source: cfg.user.utm_source,
-      initial_utm_medium: cfg.user.utm_medium,
-      initial_utm_campaign: cfg.user.utm_campaign,
-      initial_referrer: cfg.user.referrer,
-      initial_referring_domain: cfg.user.referring_domain
-    };
-    if (typeof a.Identify !== 'function') {
-      console.warn('[BarqAmp] amplitude.Identify unavailable — releasing tracks without identify.');
-      releaseQueue();
-      return;
-    }
-    var id = new a.Identify();
-    Object.keys(props).forEach(function (key) { id.set(key, props[key]); });
-    Object.keys(once).forEach(function (key) { id.setOnce(key, once[key]); });
-    record('$identify', { $set: props, $setOnce: once }, null);
-    var res = a.identify(id);
-    if (a.flush) a.flush();
-    var done = res && res.promise ? res.promise : Promise.resolve();
-    Promise.race([done, wait(IDENTIFY_TIMEOUT_MS)]).then(releaseQueue, releaseQueue);
+    state.readyPromise = state.initPromise.then(function () {
+      var a = amp();
+      a.setUserId(p.userId);
+      var cfg = PERSONAS[p.persona];
+      var props = { persona: p.persona };
+      for (var k in cfg.user) props[k] = cfg.user[k];
+      var once = {
+        initial_utm_source: cfg.user.utm_source,
+        initial_utm_medium: cfg.user.utm_medium,
+        initial_utm_campaign: cfg.user.utm_campaign,
+        initial_referrer: cfg.user.referrer,
+        initial_referring_domain: cfg.user.referring_domain
+      };
+      if (typeof a.Identify !== 'function') {
+        throw new Error('amplitude.Identify unavailable');
+      }
+      var id = new a.Identify();
+      Object.keys(props).forEach(function (key) { id.set(key, props[key]); });
+      Object.keys(once).forEach(function (key) { id.setOnce(key, once[key]); });
+      record('$identify', { $set: props, $setOnce: once }, null);
+      var res = a.identify(id);
+      if (a.flush) a.flush();
+      return sdkPromise(res);
+    }).then(releaseQueue);
+    state.readyPromise.catch(function (err) {
+      console.warn('[BarqAmp] Identity setup failed; events remain queued:', err);
+    });
   }
 
   /* ---------- public API ---------- */
@@ -265,7 +272,7 @@
       console.warn('[BarqAmp] track("' + name + '") ignored — SDK not initialised.');
       return Promise.resolve(null);
     }
-    return new Promise(function (resolve) {
+    var pending = new Promise(function (resolve) {
       var job = function () {
         if (FUNNEL[name]) {
           var deepest = parseInt(lsGet('barq_deepest') || '0', 10);
@@ -274,18 +281,63 @@
         }
         record(name, props, options);
         var res = options ? amp().track(name, props, options) : amp().track(name, props);
-        if (_flush && amp().flush) amp().flush();
+        // Submit page-load events immediately as well as click events.
+        if (amp().flush) amp().flush();
         (res && res.promise ? res.promise : Promise.resolve()).then(resolve, resolve);
       };
       if (state.ready) job(); else state.queue.push(job);
     });
+    state.pending.push(pending);
+    pending.then(function () {
+      var index = state.pending.indexOf(pending);
+      if (index !== -1) state.pending.splice(index, 1);
+    });
+    return pending;
+  }
+
+  function drainBeforeNavigation() {
+    if (!current() || !state.inited || state.optedOut) return Promise.resolve();
+    // The upload grace period starts AFTER SDK initialization and identify.
+    // Previously the 800ms redirect could discard an entire page's JS queue.
+    return Promise.race([
+      state.readyPromise || Promise.resolve(),
+      wait(READY_WAIT_MS).then(function () {
+        if (!state.ready) console.warn('[BarqAmp] SDK readiness timed out before navigation.');
+      })
+    ]).catch(function () {}).then(function () {
+      if (!state.ready) return;
+      var pending = state.pending.slice();
+      if (amp().flush) pending.push(sdkPromise(amp().flush()));
+      return Promise.race([Promise.all(pending), wait(NAV_WAIT_MS)]);
+    });
+  }
+
+  function navigate(href, beforeLeave) {
+    if (state.navigating) return;
+    state.navigating = true;
+    return drainBeforeNavigation().then(function () {
+      if (beforeLeave) beforeLeave();
+      location.href = href;
+    });
   }
 
   function trackThenGo(name, props, href, options) {
-    var gone = false;
-    function go() { if (!gone) { gone = true; location.href = href; } }
-    Promise.race([track(name, props, options, true), wait(NAV_WAIT_MS)]).then(go, go);
+    if (state.navigating) return;
+    track(name, props, options, true);
+    return navigate(href);
   }
+
+  // Preserve normal link semantics and page handlers (corridor/beneficiary selection).
+  // Only ordinary same-tab links inside this app need the analytics drain.
+  document.addEventListener('click', function (event) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    var link = event.target.closest && event.target.closest('a[href]');
+    if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+    var url = new URL(link.href, location.href);
+    if (url.origin !== location.origin || url.href.indexOf(ROOT) !== 0 || (url.pathname === location.pathname && url.hash)) return;
+    event.preventDefault();
+    navigate(url.href);
+  });
 
   function normalisedPath() {
     return location.pathname.replace(/index\.html$/, '').replace(/\/+$/, '') || '/';
@@ -348,9 +400,10 @@
   }
 
   function logout() {
-    if (state.inited && amp() && amp().reset) amp().reset();
-    clearBarqKeys(false);
-    location.href = ROOT;
+    return navigate(ROOT, function () {
+      if (state.inited && amp() && amp().reset) amp().reset();
+      clearBarqKeys(false);
+    });
   }
 
   /* ---------- session_ended on every page exit ---------- */
@@ -360,7 +413,8 @@
     if (!state.inited || state.optedOut || !p) return;
     var a = amp();
     try { a.setTransport('beacon'); } catch (e) { /* older SDK */ }
-    if (!state.ready) releaseQueue();
+    // Never bypass identify to release events during unload.
+    if (!state.ready) return;
     var deepest = Math.min(5, Math.max(1, parseInt(lsGet('barq_deepest') || '1', 10)));
     var sid = a.getSessionId ? a.getSessionId() : null;
     var started = typeof sid === 'number' && sid > 0 ? sid : state.pageStart;
@@ -394,6 +448,10 @@
   function sdkCheck() {
     var a = window.amplitude;
     var report = {
+      initialized: state.inited,
+      identityReady: state.ready,
+      queuedEvents: state.queue.length,
+      pendingEvents: state.pending.length,
       amplitude: typeof a,
       'amplitude.track': a ? typeof a.track : 'n/a',
       sessionReplay: typeof window.sessionReplay,
@@ -435,6 +493,7 @@
     logout: logout,
     track: track,
     trackThenGo: trackThenGo,
+    navigate: navigate,
     pageView: pageView,
     sdkCheck: sdkCheck,
     rec: rec

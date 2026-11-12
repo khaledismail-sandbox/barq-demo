@@ -139,7 +139,7 @@
     <div class="kg-done" id="done" hidden>
       <div class="big"><span data-icon="check" data-size="44"></span></div>
       <div class="title-md">You’re verified ⚡</div>
-      <p class="sub mt8" id="doneMsg">Your transfer is on its way.</p>
+      <p class="sub mt8" id="doneMsg">Identity verification complete.</p>
       <button class="btn secondary mt24" id="restart" type="button">Start again</button>
     </div>
   </main>
@@ -158,7 +158,6 @@
   var ben = stored && stored.name ? stored : D.recipient(def.recipient);
   var amt = (!p.fallback && Number(Barq.get('amount'))) || def.amount;
   document.getElementById('transfer').innerHTML = Barq.avatar(ben.name, ben.corridor) + '<div class="grow"><div class="caption">Your transfer is waiting</div><b>' + Barq.money(amt) + ' SAR to ' + Barq.esc(ben.name) + '</b></div>';
-  document.getElementById('doneMsg').textContent = Barq.money(amt) + ' SAR to ' + ben.name + ' is on its way.';
 
   var s = {
     idType: 'iqama', idNumber: '', dob: '12/03/1994', nationality: D.corridor(ben.corridor).country,
@@ -223,7 +222,7 @@
     var r = reason();
     var next = document.getElementById('next');
     next.disabled = !!r;
-    next.textContent = step === 4 ? 'Finish & send money' : 'Continue';
+    next.textContent = step === 4 ? 'Finish verification' : 'Continue';
     document.getElementById('why').textContent = r || '';
     var nb = document.getElementById('nafathBtn');
     if (!s.nafath && !nb.dataset.busy) {
@@ -327,7 +326,7 @@
     if (!document.getElementById('done').hidden) return;
     if (step > 1) { step--; render(); fireStep(); }
   });
-  document.getElementById('restart').addEventListener('click', function () { location.reload(); });
+  document.getElementById('restart').addEventListener('click', function () { BarqAmp.navigate(location.href); });
 
   render();
   fireStep();

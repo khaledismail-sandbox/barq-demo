@@ -109,7 +109,7 @@
   res.addEventListener('click', function (e) {
     var b = e.target.closest('[data-f]'); if (!b) return;
     Barq.selectBeneficiary(found[+b.getAttribute('data-f')]);
-    location.href = '../quote/';
+    BarqAmp.navigate('../quote/');
   });
 
   var form = document.getElementById('newForm'), method = 'Bank Transfer';

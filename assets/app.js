@@ -242,7 +242,7 @@ window.Barq = (function () {
   function wireBack() {
     document.querySelectorAll('[data-back]').forEach(function (b) {
       if (!b.innerHTML.trim()) b.innerHTML = icon('back', 24);
-      b.addEventListener('click', function () { location.href = b.getAttribute('data-back'); });
+      b.addEventListener('click', function () { BarqAmp.navigate(b.getAttribute('data-back')); });
     });
   }
 
